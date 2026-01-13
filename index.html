@@ -2,24 +2,23 @@
 <html lang="es">
 <head>
    <script>
-  function validarAcceso() {
-    var usuarioValido = "erick"; 
-    var claveValida = "14469137";
+  function validar() {
+    var userValido = "erick"; 
+    var passValida = "14469137";
 
-    var user = prompt("Usuario de Ruta 58:");
-    var pass = prompt("Contraseña:");
+    var u = prompt("Usuario de Ruta 58:");
+    var p = prompt("Contraseña:");
 
-    if (user === usuarioValido && pass === claveValida) {
-      // Si es correcto, muestra el contenido
+    if (u === userValido && p === passValida) {
+      // Solo si ambos son correctos, mostramos la app
       document.body.style.display = "block";
     } else {
-      // Si es incorrecto, lo saca de la página
       alert("Acceso denegado.");
       window.location.href = "https://google.com";
     }
   }
-  // Ejecuta la validación apenas cargue la ventana
-  window.onload = validarAcceso;
+  // Esto obliga a pedir la clave ANTES de mostrar nada
+  window.onload = validar;
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
