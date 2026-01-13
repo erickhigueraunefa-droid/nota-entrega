@@ -1,18 +1,25 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <script>
-  var usuarioValido = "erick"; // Puedes cambiar este nombre
-  var claveValida = "14469137";   // Puedes cambiar esta clave
+   <script>
+  function validarAcceso() {
+    var usuarioValido = "erick"; 
+    var claveValida = "14469137";
 
-  var user = prompt("Usuario de Ruta 58:");
-  var pass = prompt("Contraseña:");
+    var user = prompt("Usuario de Ruta 58:");
+    var pass = prompt("Contraseña:");
 
-  if (user !== usuarioValido || pass !== claveValida) {
-    alert("Acceso denegado. Solo personal autorizado.");
-    document.body.innerHTML = "<h1>Área restringida - Ruta 58</h1>";
-    window.location.href = "https://google.com"; // Los saca de la página
+    if (user === usuarioValido && pass === claveValida) {
+      // Si es correcto, muestra el contenido
+      document.body.style.display = "block";
+    } else {
+      // Si es incorrecto, lo saca de la página
+      alert("Acceso denegado.");
+      window.location.href = "https://google.com";
+    }
   }
+  // Ejecuta la validación apenas cargue la ventana
+  window.onload = validarAcceso;
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
