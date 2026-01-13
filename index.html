@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <script>
+  var usuarioValido = "erick"; // Puedes cambiar este nombre
+  var claveValida = "14469137";   // Puedes cambiar esta clave
+
+  var user = prompt("Usuario de Ruta 58:");
+  var pass = prompt("Contraseña:");
+
+  if (user !== usuarioValido || pass !== claveValida) {
+    alert("Acceso denegado. Solo personal autorizado.");
+    document.body.innerHTML = "<h1>Área restringida - Ruta 58</h1>";
+    window.location.href = "https://google.com"; // Los saca de la página
+  }
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tecnocepillos V17.1 - Corregido</title>
