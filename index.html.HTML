@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tecnocepillos V17.1 - Corregido</title>
+    <style>
+        /* === RESET GLOBAL === */
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        /* ESTILOS GENERALES (PANTALLA) */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; padding-bottom: 60px; }
+        
+        /* BARRA DE CONTROL (ADAPTABLE) */
+        .barra { background: #1a202c; color: white; padding: 8px 5px; position: sticky; top: 0; z-index: 99; box-shadow: 0 2px 5px rgba(0,0,0,0.3); width: 100%; }
+        .fila { display: flex; gap: 5px; margin-bottom: 5px; width: 100%; }
+        
+        /* Inputs y Botones Barra */
+        input, select, button { font-family: inherit; font-size: 12px; border-radius: 4px; }
+        .barra input, .barra select { padding: 8px 5px; border: 1px solid #ccc; background: white; }
+        .input-dark { background: #2d3748 !important; color: white; border: 1px solid #4a5568 !important; }
+        
+        .barra button { border: none; padding: 10px; color: white; font-weight: bold; flex: 1; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; }
+        .btn-add { background: #f6e05e !important; color: black !important; width: 45px; flex: none; font-size: 18px; padding: 0; }
+        .btn-save { background: #3182ce !important; }
+        .btn-wa { background: #48bb78 !important; }
+        .btn-mail { background: #e53e3e !important; }
+        
+        /* HOJA DE PAPEL (FLUIDA) */
+        .hoja { background: white; width: 96%; max-width: 800px; margin: 15px auto; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); min-height: 600px; }
+        
+        /* Estilos internos hoja */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th { background: #2d3748; color: white; padding: 5px; text-align: left; font-size: 10px; text-transform: uppercase; }
+        td { border-bottom: 1px solid #eee; padding: 6px 5px; font-size: 11px; vertical-align: middle; }
+        
+        .totales { text-align: right; margin-top: 20px; border-top: 2px solid #2d3748; padding-top: 10px; }
+        
+        /* Canvas Firma */
+        canvas { border: 1px dashed #cbd5e0; background: #f7fafc; width: 100%; height: 70px; touch-action: none; }
+        
+        /* Inputs footer */
+        .input-line { width: 100%; border: none; border-bottom: 1px solid #ccc; font-size: 10px; margin-bottom: 4px; font-family: monospace; background: transparent; }
+        .label-small { font-size: 9px; font-weight: bold; color: #555; text-transform: uppercase; display: block; margin-top: 4px; }
+
+        /* === MEDIA QUERIES (AJUSTES MÓVIL) === */
+        @media (max-width: 480px) {
+            .barra { padding: 5px; }
+            .fila { gap: 3px; }
+            #selProd { flex: 2; min-width: 100px; }
+            #inTasa, #inPrecio { width: 50px !important; }
+            .hoja { padding: 15px 10px; margin: 10px auto; }
+            h2 { font-size: 16px !important; }
+            .totales { font-size: 11px; }
+            #txtTotal { font-size: 16px !important; }
+        }
+
+        /* === IMPRESIÓN (COMPACTA EN 1 HOJA) === */
+        @media print {
+            .barra, .no-print { display: none !important; }
+            body { background: white; margin: 0; padding: 0; }
+            .hoja { margin: 0; padding: 20px !important; box-shadow: none; width: 100%; max-width: 100%; border: none; min-height: auto; }
+            body, table, td, th, input, select, p, div, label { font-size: 10px !important; }
+            h2 { font-size: 14px !important; margin-bottom: 2px !important; }
+            #txtTotal { font-size: 14px !important; }
+            .totales { margin-top: 10px; padding-top: 5px; }
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="barra">
+        <div class="fila">
+            <select id="selTipo" class="input-dark" style="flex:2" onchange="cambiarTitulo()">
+                <option>NOTA DE ENTREGA</option>
+                <option>PRESUPUESTO</option>
+            </select>
+            <div class="input-dark" style="display:flex; align-items:center; padding:0 5px; flex:1;">
+                <span style="font-size:10px; color:#aaa; margin-right:2px;">N°</span>
+                <input type="number" id="numFolio" value="1" class="input-dark" style="border:none; width:100%; text-align:center; padding:0;" onchange="actualizarFolio()">
+            </div>
+        </div>
+        
+        <div class="fila">
+            <input type="number" id="inTasa" value="55.00" style="width:55px; flex:none;" placeholder="Tasa">
+            <select id="selProd" style="flex:1;">
+                <option value="">-- Seleccionar --</option>
+                <option value="Cepillo Botellon Profesional">Cepillo Botellón Pro</option>
+                <option value="Cepillo Pulir 11 pulgadas">Cepillo Pulir 11"</option>
+                <option value="Cepillo Lavar 11 pulgadas">Cepillo Lavar 11"</option>
+                <option value="Cepillo Pulir 15 pulgadas">Cepillo Pulir 15"</option>
+                <option value="Cepillo Lavar 15 pulgadas">Cepillo Lavar 15"</option>
+                <option value="Cepillo Lavar 17 pulgadas">Cepillo Lavar 17"</option>
+                <option value="Cepillo Pulir 17 pulgadas">Cepillo Pulir 17"</option>
+                <option value="Cepillo Lavar 18 pulgadas">Cepillo Lavar 18"</option>
+                <option value="Cepillo Pulir 18 pulgadas">Cepillo Pulir 18"</option>
+                <option value="Herraje Universal">Herraje Universal</option>
+            </select>
+            <input type="number" id="inPrecio" placeholder="$" style="width:55px; flex:none;">
+            <button class="btn-add" onclick="agregar()">+</button>
+        </div>
+
+        <div class="fila" style="font-size: 10px; color: #ccc; justify-content: flex-end;">
+             <label><input type="checkbox" id="chkIVA" onchange="calc()"> IVA 16%</label>
+             <label style="margin-left:10px"><input type="checkbox" id="chkEnvio" onchange="verEnvio()"> Envío Gratis</label>
+        </div>
+
+        <div class="fila">
+            <button class="btn-save" onclick="guardar()">💾 PDF</button>
+            <button class="btn-wa" onclick="wapp()">📱 WA</button>
+            <button class="btn-mail" onclick="mail()">📧 Mail</button>
+        </div>
+    </div>
+
+    <div class="hoja">
+        
+        <div style="display:flex; justify-content:space-between; border-bottom:2px solid #2d3748; padding-bottom:10px; margin-bottom:10px;">
+            <div style="display:flex; gap:10px;">
+                <div style="width:70px; height:70px; border:1px dashed #ccc; display:flex; align-items:center; justify-content:center; position:relative; cursor:pointer; border-radius:4px; background:#f9f9f9;">
+                    <span id="txtLogoPl" style="font-size:8px; text-align:center; color:#aaa;">TOCA<br>LOGO</span>
+                    <img id="imgLogo" style="position:absolute; width:100%; height:100%; object-fit:contain; display:none;">
+                    <input type="file" accept="image/*" style="position:absolute; width:100%; height:100%; opacity:0; cursor:pointer;" onchange="verLogo(this)">
+                </div>
+                <div>
+                    <h2 style="margin:0; color:#1a202c; font-size:18px; text-transform:uppercase;">TECNOCEPILLOS F.P.</h2>
+                    <p style="margin:2px 0; font-size:11px; font-weight:bold;">Atención Técnica: Erick Higuera</p>
+                    <p style="margin:0; font-size:10px; color:#555;">RIF: V-14469137-5<br>Cagua, Edo. Aragua - Venezuela</p>
+                </div>
+            </div>
+            <div style="text-align:right;">
+                <div style="background:#f6e05e; color:black; padding:3px 10px; font-weight:bold; font-size:10px; display:inline-block; margin-bottom:4px;" id="txtTitulo">NOTA DE ENTREGA</div>
+                <div style="font-weight:bold; font-size:12px;">N° <span id="txtFolio">001</span></div>
+                <input type="date" id="fecha" style="border:none; text-align:right; font-size:11px; font-family:inherit; color:#555; background:transparent;">
+            </div>
+        </div>
+
+        <div style="background:#f7fafc; padding:8px; margin-bottom:10px; border-radius:4px; border:1px solid #eee; font-size:11px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <input type="text" id="clNombre" placeholder="NOMBRE DEL CLIENTE / RAZÓN SOCIAL" style="grid-column: span 2; font-weight:bold; border:none; border-bottom:1px solid #ccc; background:transparent; width:100%; font-size:11px;">
+                <input type="text" placeholder="RIF / C.I." style="border:none; border-bottom:1px solid #ccc; background:transparent; width:100%; font-size:11px;">
+                <input type="tel" id="clTlf" placeholder="TELÉFONO" style="border:none; border-bottom:1px solid #ccc; background:transparent; width:100%; font-size:11px;">
+                <input type="email" id="clEmail" placeholder="CORREO ELECTRÓNICO" style="grid-column: span 2; border:none; border-bottom:1px solid #ccc; background:transparent; width:100%; font-size:11px;">
+            </div>
+        </div>
+
+        <div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Descripción</th>
+                        <th style="text-align:center; width:40px;">Cant</th>
+                        <th style="text-align:right; width:70px;">Precio ($)</th>
+                        <th style="text-align:right; width:70px;">Total ($)</th>
+                        <th style="width:20px" class="no-print"></th>
+                    </tr>
+                </thead>
+                <tbody id="tabla"></tbody>
+            </table>
+        </div>
+
+        <div class="totales">
+            <div id="lblEnvio" style="display:none; color:green; font-weight:bold; font-size:10px; margin-bottom:4px; background:#e6fffa; padding:2px 5px; display:inline-block; border-radius:4px;">✨ ENVÍO GRATIS INCLUIDO ✨</div>
+            <div style="font-size:11px; color:#555; margin-bottom:2px;">Subtotal: <span id="txtSub" style="color:black; font-weight:bold;">$0.00</span></div>
+            <div id="divIVA" style="font-size:11px; display:none; color:#555; margin-bottom:2px;">IVA (16%): <span id="txtIVA" style="color:black;">$0.00</span></div>
+            <div style="font-size:16px; font-weight:bold; margin-top:4px; color:#1a202c;">TOTAL: <span id="txtTotal">$0.00</span></div>
+            <div style="font-size:12px; color:#2b6cb0; font-weight:bold; background:#ebf8ff; display:inline-block; padding:2px 6px; border-radius:4px; margin-top:3px;">Bs: <span id="txtBs">0,00</span></div>
+            <div style="font-size:9px; color:#999; margin-top:2px;">Tasa Ref: Bs. <span id="txtTasaRef">55.00</span></div>
+        </div>
+
+        <div style="margin-top:20px; display:grid; grid-template-columns: 1fr 1fr; gap:20px; border-top:1px solid #eee; padding-top:15px;">
+            
+            <div>
+                <h4 style="margin:0 0 4px 0; font-size:10px; color:#2d3748; text-transform:uppercase; border-bottom:1px solid #2d3748; padding-bottom:2px;">💰 Datos de Pago</h4>
+                <div style="font-size:9px; color:#4a5568; margin-bottom:8px;">
+                    <strong>BANESCO (Pago Móvil)</strong><br>
+                    C.I.: 14.469.137 | Telf: 0412-0375708
+                </div>
+
+                <div style="background:#fdfdfd; border:1px solid #eee; padding:4px; border-radius:4px;">
+                    <div style="border:2px dashed #ccc; height:80px; display:flex; align-items:center; justify-content:center; position:relative; border-radius:4px; background:white; overflow:hidden;">
+                        <span id="txtPagoPl" style="font-size:9px; color:#aaa; text-align:center;">📷 FOTO<br>PAGO</span>
+                        <img id="imgP" style="position:absolute; width:100%; height:100%; object-fit:contain; display:none;">
+                        <input type="file" accept="image/*" style="position:absolute; width:100%; height:100%; opacity:0; cursor:pointer;" onchange="verFoto(this)">
+                    </div>
+                    <input type="text" placeholder="N° REFERENCIA..." style="width:100%; margin-top:4px; text-align:center; font-weight:bold; font-size:10px; border:1px solid #ccc; padding:3px; border-radius:3px;">
+                </div>
+
+                <div style="margin-top:10px; position:relative;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                        <span style="font-size:8px; font-weight:bold; color:#2d3748;">FIRMA AUTORIZADA:</span>
+                        <span class="no-print" style="font-size:8px; color:red; cursor:pointer; text-decoration:underline;" onclick="limpiar()">Borrar</span>
+                    </div>
+                    <canvas id="canvas" style="border-bottom:1px solid #000; background:transparent; height:60px;"></canvas>
+                    <p style="font-size:9px; font-weight:bold; margin-top:2px;">Erick Higuera</p>
+                </div>
+            </div>
+            
+            <div>
+                 <h4 style="margin:0 0 4px 0; font-size:10px; color:#2d3748; text-transform:uppercase; border-bottom:1px solid #2d3748; padding-bottom:2px;">📦 Datos de Envío</h4>
+                 <label class="label-small">Empresa / Destinatario:</label>
+                 <select class="input-line" style="font-weight:bold; font-size:10px;">
+                     <option>TEALCA</option><option>ZOOM</option><option>MRW</option><option>DOMESA</option><option>ENTREGA PERSONAL</option><option selected>PENDIENTE</option>
+                 </select>
+                 <input type="text" class="input-line" placeholder="Nombre Recibe..." style="font-size:10px;">
+                 <input type="text" class="input-line" placeholder="C.I. / Tlf..." style="font-size:10px;">
+                 <label class="label-small">Dirección / Guía:</label>
+                 <input type="text" class="input-line" placeholder="Oficina Destino..." style="font-size:10px;">
+                 <input type="text" class="input-line" style="font-weight:bold; font-size:11px; color:#2b6cb0;" placeholder="N° Guía: 0000...">
+            </div>
+        </div>
+        
+        <div style="text-align:center; font-size:8px; color:#ccc; margin-top:20px;">Generado por Sistema Tecnocepillos</div>
+    </div>
+
+    <script>
+        var lista = [];
+        var canvas, ctx;
+        var dibujando = false;
+
+        // ESPERAR A QUE TODO CARGUE ANTES DE INICIAR EL CEREBRO
+        window.addEventListener('load', function() {
+            // 1. Iniciar Fechas y Folios
+            document.getElementById('fecha').valueAsDate = new Date();
+            var f = localStorage.getItem('folio');
+            if(f) { document.getElementById('numFolio').value = f; actualizarFolio(); }
+
+            // 2. Iniciar Canvas (Firma) de forma segura
+            canvas = document.getElementById('canvas');
+            if (canvas) {
+                ctx = canvas.getContext('2d');
+                // Eventos de firma
+                canvas.onmousedown = function(e){ dibujando=true; ctx.beginPath(); draw(e.offsetX, e.offsetY); };
+                canvas.onmouseup = function(){ dibujando=false; };
+                canvas.onmousemove = function(e){ if(dibujando) draw(e.offsetX, e.offsetY); };
+                // Eventos táctiles (móvil) para firma
+                canvas.ontouchstart = function(e){ 
+                    e.preventDefault(); dibujando=true; ctx.beginPath(); 
+                    var r = canvas.getBoundingClientRect(); draw(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top);
+                };
+                canvas.ontouchend = function(e){ e.preventDefault(); dibujando=false; };
+                canvas.ontouchmove = function(e){ 
+                    if(dibujando) { e.preventDefault(); var r = canvas.getBoundingClientRect(); draw(e.touches[0].clientX - r.left, e.touches[0].clientY - r.top); }
+                };
+                setTimeout(resize, 500); // Ajustar tamaño al inicio
+            } else {
+                 console.error("Error crítico: Canvas no encontrado");
+            }
+        });
+
+        // --- FUNCIONES PRINCIPALES ---
+        function agregar() {
+            var prod = document.getElementById('selProd').value;
+            var prec = parseFloat(document.getElementById('inPrecio').value);
+            if(!prod || isNaN(prec)) { alert("Falta elegir producto o precio"); return; }
+            var existe = false;
+            for(var i=0; i<lista.length; i++) {
+                if(lista[i].prod === prod && lista[i].prec === prec) { lista[i].cant++; existe = true; }
+            }
+            if(!existe) lista.push({prod: prod, prec: prec, cant: 1});
+            document.getElementById('selProd').value = "";
+            document.getElementById('inPrecio').value = "";
+            pintarTabla();
+        }
+
+        function pintarTabla() {
+            var tbody = document.getElementById('tabla');
+            tbody.innerHTML = "";
+            for(var i=0; i<lista.length; i++) {
+                var item = lista[i];
+                var total = (item.cant * item.prec).toFixed(2);
+                var fila = "<tr><td>" + item.prod + "</td>" +
+                    "<td style='text-align:center'><input type='number' value='" + item.cant + "' style='width:35px; text-align:center; border:1px solid #ddd; font-size:11px;' onchange='cambiarCant(" + i + ", this.value)'></td>" +
+                    "<td style='text-align:right'>$" + item.prec.toFixed(2) + "</td>" +
+                    "<td style='text-align:right'><b>$" + total + "</b></td>" +
+                    "<td class='no-print'><span style='color:red; cursor:pointer; font-weight:bold; padding:5px;' onclick='borrar(" + i + ")'>X</span></td></tr>";
+                tbody.innerHTML += fila;
+            }
+            calc();
+        }
+
+        function cambiarCant(i, val) { lista[i].cant = parseInt(val); calc(); }
+        function borrar(i) { lista.splice(i, 1); pintarTabla(); }
+
+        function calc() {
+            var sub = 0;
+            for(var i=0; i<lista.length; i++) sub += (lista[i].cant * lista[i].prec);
+            var ivaCheck = document.getElementById('chkIVA').checked;
+            var iva = ivaCheck ? sub * 0.16 : 0;
+            var total = sub + iva;
+            var tasa = parseFloat(document.getElementById('inTasa').value) || 0;
+            var bs = total * tasa;
+            document.getElementById('divIVA').style.display = ivaCheck ? 'block' : 'none';
+            document.getElementById('txtSub').innerText = "$" + sub.toFixed(2);
+            document.getElementById('txtIVA').innerText = "$" + iva.toFixed(2);
+            document.getElementById('txtTotal').innerText = "$" + total.toFixed(2);
+            document.getElementById('txtBs').innerText = bs.toLocaleString('es-VE', {minimumFractionDigits:2});
+            document.getElementById('txtTasaRef').innerText = tasa.toFixed(2);
+        }
+
+        // --- UTILIDADES ---
+        function verEnvio() { document.getElementById('lblEnvio').style.display = document.getElementById('chkEnvio').checked ? 'inline-block' : 'none'; }
+        function cambiarTitulo() { document.getElementById('txtTitulo').innerText = document.getElementById('selTipo').value; }
+        function actualizarFolio() {
+            var val = document.getElementById('numFolio').value;
+            if(val.length < 2) val = "00" + val; else if(val.length < 3) val = "0" + val;
+            document.getElementById('txtFolio').innerText = val;
+            localStorage.setItem('folio', document.getElementById('numFolio').value);
+        }
+        function verLogo(input) { if(input.files && input.files[0]) { document.getElementById('imgLogo').src = URL.createObjectURL(input.files[0]); document.getElementById('imgLogo').style.display = 'block'; document.getElementById('txtLogoPl').style.display = 'none'; } }
+        function verFoto(input) { if(input.files && input.files[0]) { document.getElementById('imgP').src = URL.createObjectURL(input.files[0]); document.getElementById('imgP').style.display = 'block'; document.getElementById('txtPagoPl').style.display = 'none'; } }
+
+        // --- ACCIONES DE BOTONES ---
+        function guardar() {
+            var act = parseInt(document.getElementById('numFolio').value);
+            document.getElementById('numFolio').value = act + 1;
+            actualizarFolio();
+            window.print();
+        }
+        function wapp() {
+            var tlf = document.getElementById('clTlf').value.replace(/\D/g,'');
+            var nom = document.getElementById('clNombre').value || "Cliente";
+            var tot = document.getElementById('txtTotal').innerText;
+            if(tlf.length < 10) { alert("Por favor, ingrese un teléfono válido (ej: 0412...)"); return; }
+            if(!tlf.startsWith('58')) tlf = '58' + (tlf.startsWith('0') ? tlf.substring(1) : tlf);
+            window.open("https://wa.me/" + tlf + "?text=Hola " + nom + ", adjunto nota de entrega por " + tot, '_blank');
+        }
+        function mail() {
+            var mail = document.getElementById('clEmail').value;
+            if(!mail) return alert("Por favor, ingrese un correo electrónico");
+            location.href = "mailto:" + mail + "?subject=Nota de Entrega Tecnocepillos&body=Adjunto su documento.";
+        }
+
+        // --- FUNCIONES CANVAS ---
+        function resize() {
+            if(!canvas) return;
+            var r = canvas.getBoundingClientRect();
+            canvas.width = r.width; canvas.height = r.height;
+            ctx.strokeStyle = "#000"; ctx.lineWidth = 2;
+        }
+        function draw(x,y) { ctx.lineTo(x,y); ctx.stroke(); ctx.moveTo(x,y); }
+        function limpiar() { ctx.clearRect(0,0,canvas.width, canvas.height); }
+    </script>
+</body>
+</html>
